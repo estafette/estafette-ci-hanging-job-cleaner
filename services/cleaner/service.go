@@ -24,6 +24,10 @@ type service struct {
 
 func (s *service) Init(ctx context.Context) (err error) {
 	_, err = s.estafetteciapiClient.GetToken(ctx)
+	if err != nil {
+		return
+	}
+
 	return
 }
 

@@ -8,6 +8,7 @@ import (
 )
 
 type Service interface {
+	Init(ctx context.Context) (err error)
 	Clean(ctx context.Context) (err error)
 }
 
@@ -19,6 +20,11 @@ func NewService(estafetteciapiClient estafetteciapi.Client) Service {
 
 type service struct {
 	estafetteciapiClient estafetteciapi.Client
+}
+
+func (s *service) Init(ctx context.Context) (err error) {
+	_, err = s.estafetteciapiClient.GetToken(ctx)
+	return
 }
 
 func (s *service) Clean(ctx context.Context) (err error) {

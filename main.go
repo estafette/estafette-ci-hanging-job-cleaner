@@ -49,7 +49,12 @@ func main() {
 	estafetteciapiClient := estafetteciapi.NewClient(*apiBaseURL, *clientID, *clientSecret)
 	cleanerService := cleaner.NewService(estafetteciapiClient)
 
-	err := cleanerService.Clean(ctx)
+	err := cleanerService.Init(ctx)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed initializing cleaner service")
+	}
+
+	err = cleanerService.Clean(ctx)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed cleaning builds and releases")
 	}

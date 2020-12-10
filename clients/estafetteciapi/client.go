@@ -146,17 +146,17 @@ func (c *client) CancelBuild(ctx context.Context, build *contracts.Build) (err e
 	log.Info().Msgf("Canceling build for pipeline %v/%v/%v with id %v", build.RepoSource, build.RepoOwner, build.RepoName, build.ID)
 
 	// DELETE /api/pipelines/:source/:owner/:repo/builds/:revisionOrId
-	cancelBuildURL := fmt.Sprintf("%v/api/pipelines/%v/%v/%v/builds/%v", c.apiBaseURL, build.RepoSource, build.RepoOwner, build.RepoName, build.ID)
-	headers := map[string]string{
-		"Authorization": fmt.Sprintf("Bearer %v", c.token),
-		"Content-Type":  "application/json",
-	}
+	// cancelBuildURL := fmt.Sprintf("%v/api/pipelines/%v/%v/%v/builds/%v", c.apiBaseURL, build.RepoSource, build.RepoOwner, build.RepoName, build.ID)
+	// headers := map[string]string{
+	// 	"Authorization": fmt.Sprintf("Bearer %v", c.token),
+	// 	"Content-Type":  "application/json",
+	// }
 
-	_, err = c.deleteRequest(cancelBuildURL, span, nil, headers)
-	if err != nil {
-		log.Error().Err(err).Str("url", cancelBuildURL).Msgf("Failed canceling build for pipeline %v/%v/%v with id %v", build.RepoSource, build.RepoOwner, build.RepoName, build.ID)
-		return
-	}
+	// _, err = c.deleteRequest(cancelBuildURL, span, nil, headers)
+	// if err != nil {
+	// 	log.Error().Err(err).Str("url", cancelBuildURL).Msgf("Failed canceling build for pipeline %v/%v/%v with id %v", build.RepoSource, build.RepoOwner, build.RepoName, build.ID)
+	// 	return
+	// }
 
 	return nil
 }
@@ -168,17 +168,17 @@ func (c *client) CancelRelease(ctx context.Context, release *contracts.Release) 
 	log.Info().Msgf("Canceling release for pipeline %v/%v/%v with id %v", release.RepoSource, release.RepoOwner, release.RepoName, release.ID)
 
 	// DELETE /api/pipelines/:source/:owner/:repo/releases/:id
-	cancelReleaseURL := fmt.Sprintf("%v/api/pipelines/%v/%v/%v/releases/%v", c.apiBaseURL, release.RepoSource, release.RepoOwner, release.RepoName, release.ID)
-	headers := map[string]string{
-		"Authorization": fmt.Sprintf("Bearer %v", c.token),
-		"Content-Type":  "application/json",
-	}
+	// cancelReleaseURL := fmt.Sprintf("%v/api/pipelines/%v/%v/%v/releases/%v", c.apiBaseURL, release.RepoSource, release.RepoOwner, release.RepoName, release.ID)
+	// headers := map[string]string{
+	// 	"Authorization": fmt.Sprintf("Bearer %v", c.token),
+	// 	"Content-Type":  "application/json",
+	// }
 
-	_, err = c.deleteRequest(cancelReleaseURL, span, nil, headers)
-	if err != nil {
-		log.Error().Err(err).Str("url", cancelReleaseURL).Msgf("Failed canceling release for pipeline %v/%v/%v with id %v", release.RepoSource, release.RepoOwner, release.RepoName, release.ID)
-		return
-	}
+	// _, err = c.deleteRequest(cancelReleaseURL, span, nil, headers)
+	// if err != nil {
+	// 	log.Error().Err(err).Str("url", cancelReleaseURL).Msgf("Failed canceling release for pipeline %v/%v/%v with id %v", release.RepoSource, release.RepoOwner, release.RepoName, release.ID)
+	// 	return
+	// }
 
 	return nil
 }

@@ -27,31 +27,7 @@ var (
 	apiBaseURL   = kingpin.Flag("api-base-url", "The base url of the estafette-ci-api to communicate with").Envar("API_BASE_URL").Required().String()
 	clientID     = kingpin.Flag("client-id", "The id of the client as configured in Estafette, to securely communicate with the api.").Envar("CLIENT_ID").Required().String()
 	clientSecret = kingpin.Flag("client-secret", "The secret of the client as configured in Estafette, to securely communicate with the api.").Envar("CLIENT_SECRET").Required().String()
-
-	// params for gsuiteClient
-	organization = kingpin.Flag("organization", "The name of the Estafette organization these cloud assets belong to.").Envar("ORGANIZATION").Required().String()
 )
-
-const (
-	organizationKeyName     = "organization"
-	cloudKeyName            = "cloud"
-	projectKeyName          = "project"
-	gkeClusterKeyName       = "gke-cluster"
-	pubsubTopicKeyName      = "pubsub-topic"
-	cloudfunctionKeyName    = "cloud-function"
-	storageBucketKeyName    = "storage-bucket"
-	dataflowJobKeyName      = "dataflow-job"
-	bigqueryDatasetKeyName  = "bigquery-dataset"
-	bigqueryTableKeyName    = "bigquery-table"
-	cloudsqlInstanceKeyName = "cloudsql-instance"
-	cloudsqlDatabaseKeyName = "cloudsql-database"
-	bigtableInstanceKeyName = "bigtable-instance"
-	bigtableClusterKeyName  = "bigtable-cluster"
-)
-
-const cloudKeyValue = "Google Cloud"
-
-const locationLabelKey = "location"
 
 func main() {
 

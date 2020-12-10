@@ -156,11 +156,13 @@ func (c *client) CancelBuild(ctx context.Context, build *contracts.Build) (err e
 		"Content-Type":  "application/json",
 	}
 
-	_, err = c.deleteRequest(cancelBuildURL, span, nil, headers)
+	responseBody, err := c.deleteRequest(cancelBuildURL, span, nil, headers)
 	if err != nil {
 		log.Error().Err(err).Str("url", cancelBuildURL).Msgf("Failed canceling build for pipeline %v/%v/%v with id %v", build.RepoSource, build.RepoOwner, build.RepoName, build.ID)
 		return
 	}
+
+	log.Debug().Str("body", string(responseBody)).Msgf("Canceled build for pipeline %v/%v/%v with id %v...", build.RepoSource, build.RepoOwner, build.RepoName, build.ID)
 
 	return nil
 }
@@ -178,11 +180,13 @@ func (c *client) CancelRelease(ctx context.Context, release *contracts.Release) 
 		"Content-Type":  "application/json",
 	}
 
-	_, err = c.deleteRequest(cancelReleaseURL, span, nil, headers)
+	responseBody, err := c.deleteRequest(cancelReleaseURL, span, nil, headers)
 	if err != nil {
 		log.Error().Err(err).Str("url", cancelReleaseURL).Msgf("Failed canceling release for pipeline %v/%v/%v with id %v", release.RepoSource, release.RepoOwner, release.RepoName, release.ID)
 		return
 	}
+
+	log.Debug().Str("body", string(responseBody)).Msgf("Canceled release for pipeline %v/%v/%v with id %v...", release.RepoSource, release.RepoOwner, release.RepoName, release.ID)
 
 	return nil
 }

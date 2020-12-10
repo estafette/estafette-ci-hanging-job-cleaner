@@ -7,6 +7,7 @@ import (
 
 	"github.com/alecthomas/kingpin"
 	estafetteciapi "github.com/estafette/estafette-ci-hanging-job-cleaner/clients/estafetteciapi"
+	cleaner "github.com/estafette/estafette-ci-hanging-job-cleaner/services/cleaner"
 	foundation "github.com/estafette/estafette-foundation"
 	"github.com/opentracing/opentracing-go"
 	"github.com/rs/zerolog/log"
@@ -45,7 +46,13 @@ func main() {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "Main")
 	defer span.Finish()
 
-	_ = estafetteciapi.NewClient(*apiBaseURL, *clientID, *clientSecret)
+	estafetteciapiClient := estafetteciapi.NewClient(*apiBaseURL, *clientID, *clientSecret)
+	cleanerService := cleaner.NewService(estafetteciapiClient)
+
+	err := cleanerService.Clean(ctx)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed cleaning builds and releases")
+	}
 
 	log.Info().Msg("Done!")
 }

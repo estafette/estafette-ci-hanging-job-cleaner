@@ -7,11 +7,11 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 
 	contracts "github.com/estafette/estafette-ci-contracts"
+	corev1 "github.com/estafette/estafette-ci-hanging-job-cleaner/api/core/v1"
 	foundation "github.com/estafette/estafette-foundation"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
@@ -21,10 +21,10 @@ import (
 
 type Client interface {
 	GetToken(ctx context.Context) (token string, err error)
-	GetCatalogEntities(ctx context.Context, parentKey, parentValue, entityKey string) (entities []*contracts.CatalogEntity, err error)
-	CreateCatalogEntity(ctx context.Context, entity *contracts.CatalogEntity) (err error)
-	UpdateCatalogEntity(ctx context.Context, entity *contracts.CatalogEntity) (err error)
-	DeleteCatalogEntity(ctx context.Context, entity *contracts.CatalogEntity) (err error)
+	GetRunningBuilds(ctx context.Context, pageNumber, pageSize int) (pagedBuildResponse corev1.PagedBuildResponse, err error)
+	GetRunningReleases(ctx context.Context, pageNumber, pageSize int) (pagedReleasesResponse corev1.PagedReleasesResponse, err error)
+	CancelBuild(ctx context.Context, build *contracts.Build) (err error)
+	CancelRelease(ctx context.Context, release *contracts.Release) (err error)
 }
 
 // NewClient returns a new estafetteciapi.Client
@@ -83,169 +83,104 @@ func (c *client) GetToken(ctx context.Context) (token string, err error) {
 	return tokenResponse.Token, nil
 }
 
-func (c *client) GetCatalogEntities(ctx context.Context, parentKey, parentValue, entityKey string) (entities []*contracts.CatalogEntity, err error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ApiClient::GetCatalogEntities")
-	defer span.Finish()
-
-	log.Debug().Msgf("Retrieving catalog entities of type %v with parent %v=%v", entityKey, parentKey, parentValue)
-
-	pageNumber := 1
-	pageSize := 100
-	entities = make([]*contracts.CatalogEntity, 0)
-
-	for {
-		ents, pagination, err := c.getCatalogEntitiesPage(ctx, parentKey, parentValue, entityKey, pageNumber, pageSize)
-		if err != nil {
-			return entities, err
-		}
-		entities = append(entities, ents...)
-
-		if pagination.TotalPages <= pageNumber {
-			break
-		}
-
-		pageNumber++
-	}
-
-	span.LogKV("entities", len(entities))
-
-	return entities, nil
-}
-
-func (c *client) getCatalogEntitiesPage(ctx context.Context, parentKey, parentValue, entityKey string, pageNumber, pageSize int) (entities []*contracts.CatalogEntity, pagination contracts.Pagination, err error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ApiClient::getCatalogEntitiesPage")
+func (c *client) GetRunningBuilds(ctx context.Context, pageNumber, pageSize int) (pagedBuildResponse corev1.PagedBuildResponse, err error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ApiClient::GetRunningBuilds")
 	defer span.Finish()
 
 	span.LogKV("page[number]", pageNumber, "page[size]", pageSize)
 
-	parentFilter := ""
-	if parentKey != "" {
-		parentFilter = parentKey
-		if parentValue != "" {
-			parentFilter += "=" + parentValue
-		}
-
-		parentFilter = "&filter[parent]=" + url.QueryEscape(parentFilter)
-	}
-
-	entityFilter := ""
-	if entityKey != "" {
-		entityFilter = "&filter[entity]=" + url.QueryEscape(entityKey)
-	}
-
-	getCatalogEntitiesURL := fmt.Sprintf("%v/api/catalog/entities?page[number]=%v&page[size]=%v%v%v", c.apiBaseURL, pageNumber, pageSize, parentFilter, entityFilter)
+	getBuildsURL := fmt.Sprintf("%v/api/builds?filter[status]=running&filter[status]=pending&filter[status]=canceling&page[number]=%v&page[size]=%v", c.apiBaseURL, pageNumber, pageSize)
 	headers := map[string]string{
 		"Authorization": fmt.Sprintf("Bearer %v", c.token),
 		"Content-Type":  "application/json",
 	}
 
-	responseBody, err := c.getRequest(getCatalogEntitiesURL, span, nil, headers)
+	responseBody, err := c.getRequest(getBuildsURL, span, nil, headers)
 	if err != nil {
-		log.Error().Err(err).Str("url", getCatalogEntitiesURL).Msgf("Failed retrieving get catalog entities response")
+		log.Error().Err(err).Str("url", getBuildsURL).Msgf("Failed retrieving builds response")
 		return
-	}
-
-	var listResponse struct {
-		Items      []*contracts.CatalogEntity `json:"items"`
-		Pagination contracts.Pagination       `json:"pagination"`
 	}
 
 	// unmarshal json body
-	err = json.Unmarshal(responseBody, &listResponse)
+	err = json.Unmarshal(responseBody, &pagedBuildResponse)
 	if err != nil {
-		log.Error().Err(err).Str("body", string(responseBody)).Str("url", getCatalogEntitiesURL).Msgf("Failed unmarshalling get catalog entities response")
-		return
-	}
-
-	entities = listResponse.Items
-
-	span.LogKV("entities", len(entities))
-
-	return entities, listResponse.Pagination, nil
-}
-
-func (c *client) CreateCatalogEntity(ctx context.Context, entity *contracts.CatalogEntity) (err error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ApiClient::CreateCatalogEntity")
-	defer span.Finish()
-
-	log.Debug().Msgf("Creating catalog entity %v=%v with parent %v=%v", entity.Key, entity.Value, entity.ParentKey, entity.ParentValue)
-
-	span.LogKV("parent", fmt.Sprintf("%v=%v", entity.ParentKey, entity.ParentValue))
-	span.LogKV("entity", fmt.Sprintf("%v=%v", entity.Key, entity.Value))
-
-	bytes, err := json.Marshal(entity)
-	if err != nil {
-		return
-	}
-
-	createCatalogEntityURL := fmt.Sprintf("%v/api/catalog/entities", c.apiBaseURL)
-	headers := map[string]string{
-		"Authorization": fmt.Sprintf("Bearer %v", c.token),
-		"Content-Type":  "application/json",
-	}
-
-	_, err = c.postRequest(createCatalogEntityURL, span, strings.NewReader(string(bytes)), headers, http.StatusCreated)
-	if err != nil {
+		log.Error().Err(err).Str("body", string(responseBody)).Str("url", getBuildsURL).Msgf("Failed unmarshalling get builds response")
 		return
 	}
 
 	return
 }
 
-func (c *client) UpdateCatalogEntity(ctx context.Context, entity *contracts.CatalogEntity) (err error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ApiClient::UpdateCatalogEntity")
+func (c *client) GetRunningReleases(ctx context.Context, pageNumber, pageSize int) (pagedReleasesResponse corev1.PagedReleasesResponse, err error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ApiClient::GetRunningReleases")
 	defer span.Finish()
 
-	log.Debug().Msgf("Updating catalog entity %v=%v with parent %v=%v and id=%v", entity.Key, entity.Value, entity.ParentKey, entity.ParentValue, entity.ID)
+	span.LogKV("page[number]", pageNumber, "page[size]", pageSize)
 
-	span.LogKV("parent", fmt.Sprintf("%v=%v", entity.ParentKey, entity.ParentValue))
-	span.LogKV("entity", fmt.Sprintf("%v=%v", entity.Key, entity.Value))
-
-	bytes, err := json.Marshal(entity)
-	if err != nil {
-		return
-	}
-
-	updateCatalogEntityURL := fmt.Sprintf("%v/api/catalog/entities/%v", c.apiBaseURL, entity.ID)
+	getReleasesURL := fmt.Sprintf("%v/api/releases?filter[status]=running&filter[status]=pending&filter[status]=canceling&page[number]=%v&page[size]=%v", c.apiBaseURL, pageNumber, pageSize)
 	headers := map[string]string{
 		"Authorization": fmt.Sprintf("Bearer %v", c.token),
 		"Content-Type":  "application/json",
 	}
 
-	_, err = c.putRequest(updateCatalogEntityURL, span, strings.NewReader(string(bytes)), headers)
+	responseBody, err := c.getRequest(getReleasesURL, span, nil, headers)
 	if err != nil {
+		log.Error().Err(err).Str("url", getReleasesURL).Msgf("Failed retrieving releases response")
+		return
+	}
+
+	// unmarshal json body
+	err = json.Unmarshal(responseBody, &pagedReleasesResponse)
+	if err != nil {
+		log.Error().Err(err).Str("body", string(responseBody)).Str("url", getReleasesURL).Msgf("Failed unmarshalling get releases response")
 		return
 	}
 
 	return
 }
 
-func (c *client) DeleteCatalogEntity(ctx context.Context, entity *contracts.CatalogEntity) (err error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ApiClient::DeleteCatalogEntity")
+func (c *client) CancelBuild(ctx context.Context, build *contracts.Build) (err error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ApiClient::CancelBuild")
 	defer span.Finish()
 
-	log.Debug().Msgf("Deleting catalog entity %v=%v with parent %v=%v and id=%v", entity.Key, entity.Value, entity.ParentKey, entity.ParentValue, entity.ID)
+	log.Info().Msgf("Canceling build for pipeline %v/%v/%v with id %v", build.RepoSource, build.RepoOwner, build.RepoName, build.ID)
 
-	span.LogKV("parent", fmt.Sprintf("%v=%v", entity.ParentKey, entity.ParentValue))
-	span.LogKV("entity", fmt.Sprintf("%v=%v", entity.Key, entity.Value))
+	// DELETE /api/pipelines/:source/:owner/:repo/builds/:revisionOrId
+	// cancelBuildURL := fmt.Sprintf("%v/api/pipelines/%v/%v/%v/builds/%v", c.apiBaseURL, build.RepoSource, build.RepoOwner, build.RepoName, build.ID)
+	// headers := map[string]string{
+	// 	"Authorization": fmt.Sprintf("Bearer %v", c.token),
+	// 	"Content-Type":  "application/json",
+	// }
 
-	bytes, err := json.Marshal(entity)
-	if err != nil {
-		return
-	}
+	// _, err = c.deleteRequest(cancelBuildURL, span, nil, headers)
+	// if err != nil {
+	// 	log.Error().Err(err).Str("url", cancelBuildURL).Msgf("Failed canceling build for pipeline %v/%v/%v with id %v", build.RepoSource, build.RepoOwner, build.RepoName, build.ID)
+	// 	return
+	// }
 
-	deleteCatalogEntityURL := fmt.Sprintf("%v/api/catalog/entities/%v", c.apiBaseURL, entity.ID)
-	headers := map[string]string{
-		"Authorization": fmt.Sprintf("Bearer %v", c.token),
-		"Content-Type":  "application/json",
-	}
+	return nil
+}
 
-	_, err = c.deleteRequest(deleteCatalogEntityURL, span, strings.NewReader(string(bytes)), headers)
-	if err != nil {
-		return
-	}
+func (c *client) CancelRelease(ctx context.Context, release *contracts.Release) (err error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ApiClient::CancelRelease")
+	defer span.Finish()
 
-	return
+	log.Info().Msgf("Canceling release for pipeline %v/%v/%v with id %v", release.RepoSource, release.RepoOwner, release.RepoName, release.ID)
+
+	// DELETE /api/pipelines/:source/:owner/:repo/releases/:id
+	// cancelReleaseURL := fmt.Sprintf("%v/api/pipelines/%v/%v/%v/releases/%v", c.apiBaseURL, release.RepoSource, release.RepoOwner, release.RepoName, release.ID)
+	// headers := map[string]string{
+	// 	"Authorization": fmt.Sprintf("Bearer %v", c.token),
+	// 	"Content-Type":  "application/json",
+	// }
+
+	// _, err = c.deleteRequest(cancelReleaseURL, span, nil, headers)
+	// if err != nil {
+	// 	log.Error().Err(err).Str("url", cancelReleaseURL).Msgf("Failed canceling release for pipeline %v/%v/%v with id %v", release.RepoSource, release.RepoOwner, release.RepoName, release.ID)
+	// 	return
+	// }
+
+	return nil
 }
 
 func (c *client) getRequest(uri string, span opentracing.Span, requestBody io.Reader, headers map[string]string, allowedStatusCodes ...int) (responseBody []byte, err error) {

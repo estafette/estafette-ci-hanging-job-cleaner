@@ -89,7 +89,7 @@ func (c *client) GetRunningBuilds(ctx context.Context, pageNumber, pageSize int)
 
 	span.LogKV("page[number]", pageNumber, "page[size]", pageSize)
 
-	getBuildsURL := fmt.Sprintf("%v/api/builds?filter[status]=pending&filter[status]=canceling&page[number]=%v&page[size]=%v", c.apiBaseURL, pageNumber, pageSize)
+	getBuildsURL := fmt.Sprintf("%v/api/builds?filter[status]=running&filter[status]=pending&filter[status]=canceling&page[number]=%v&page[size]=%v", c.apiBaseURL, pageNumber, pageSize)
 	headers := map[string]string{
 		"Authorization": fmt.Sprintf("Bearer %v", c.token),
 		"Content-Type":  "application/json",
@@ -117,7 +117,7 @@ func (c *client) GetRunningReleases(ctx context.Context, pageNumber, pageSize in
 
 	span.LogKV("page[number]", pageNumber, "page[size]", pageSize)
 
-	getReleasesURL := fmt.Sprintf("%v/api/releases?filter[status]=pending&filter[status]=canceling&page[number]=%v&page[size]=%v", c.apiBaseURL, pageNumber, pageSize)
+	getReleasesURL := fmt.Sprintf("%v/api/releases?filter[status]=running&filter[status]=pending&filter[status]=canceling&page[number]=%v&page[size]=%v", c.apiBaseURL, pageNumber, pageSize)
 	headers := map[string]string{
 		"Authorization": fmt.Sprintf("Bearer %v", c.token),
 		"Content-Type":  "application/json",

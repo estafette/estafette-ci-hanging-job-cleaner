@@ -87,6 +87,8 @@ func (c *client) GetRunningBuilds(ctx context.Context, pageNumber, pageSize int)
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ApiClient::GetRunningBuilds")
 	defer span.Finish()
 
+	log.Info().Msgf("Retrieving pending/running/canceling build page %v of size %v...", pageNumber, pageSize)
+
 	span.LogKV("page[number]", pageNumber, "page[size]", pageSize)
 
 	getBuildsURL := fmt.Sprintf("%v/api/builds?filter[status]=running&filter[status]=pending&filter[status]=canceling&page[number]=%v&page[size]=%v", c.apiBaseURL, pageNumber, pageSize)
@@ -114,6 +116,8 @@ func (c *client) GetRunningBuilds(ctx context.Context, pageNumber, pageSize int)
 func (c *client) GetRunningReleases(ctx context.Context, pageNumber, pageSize int) (pagedReleasesResponse corev1.PagedReleasesResponse, err error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ApiClient::GetRunningReleases")
 	defer span.Finish()
+
+	log.Info().Msgf("Retrieving pending/running/canceling releases page %v of size %v...", pageNumber, pageSize)
 
 	span.LogKV("page[number]", pageNumber, "page[size]", pageSize)
 
@@ -143,7 +147,7 @@ func (c *client) CancelBuild(ctx context.Context, build *contracts.Build) (err e
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ApiClient::CancelBuild")
 	defer span.Finish()
 
-	log.Info().Msgf("Canceling build for pipeline %v/%v/%v with id %v, status %v and started at %v", build.RepoSource, build.RepoOwner, build.RepoName, build.ID, build.BuildStatus, build.InsertedAt)
+	log.Info().Msgf("Canceling build for pipeline %v/%v/%v with id %v, status %v and started at %v...", build.RepoSource, build.RepoOwner, build.RepoName, build.ID, build.BuildStatus, build.InsertedAt)
 
 	// DELETE /api/pipelines/:source/:owner/:repo/builds/:revisionOrId
 	cancelBuildURL := fmt.Sprintf("%v/api/pipelines/%v/%v/%v/builds/%v", c.apiBaseURL, build.RepoSource, build.RepoOwner, build.RepoName, build.ID)
@@ -165,7 +169,7 @@ func (c *client) CancelRelease(ctx context.Context, release *contracts.Release) 
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ApiClient::CancelRelease")
 	defer span.Finish()
 
-	log.Info().Msgf("Canceling release for pipeline %v/%v/%v with id %v, status %v and started at %v", release.RepoSource, release.RepoOwner, release.RepoName, release.ID, release.ReleaseStatus, release.InsertedAt)
+	log.Info().Msgf("Canceling release for pipeline %v/%v/%v with id %v, status %v and started at %v...", release.RepoSource, release.RepoOwner, release.RepoName, release.ID, release.ReleaseStatus, release.InsertedAt)
 
 	// DELETE /api/pipelines/:source/:owner/:repo/releases/:id
 	cancelReleaseURL := fmt.Sprintf("%v/api/pipelines/%v/%v/%v/releases/%v", c.apiBaseURL, release.RepoSource, release.RepoOwner, release.RepoName, release.ID)

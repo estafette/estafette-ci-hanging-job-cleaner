@@ -22,7 +22,9 @@ import (
 type Client interface {
 	GetToken(ctx context.Context) (token string, err error)
 	GetRunningBuilds(ctx context.Context, pageNumber, pageSize int) (pagedBuildResponse corev1.PagedBuildResponse, err error)
-	GetRunningReleases(ctx context.Context, pageNumber, pageSize int) (pagedBuildResponse corev1.PagedBuildResponse, err error)
+	GetRunningReleases(ctx context.Context, pageNumber, pageSize int) (pagedReleasesResponse corev1.PagedReleasesResponse, err error)
+	CancelBuild(ctx context.Context, build *contracts.Build) (err error)
+	CancelRelease(ctx context.Context, release *contracts.Release) (err error)
 }
 
 // NewClient returns a new estafetteciapi.Client
@@ -109,7 +111,7 @@ func (c *client) GetRunningBuilds(ctx context.Context, pageNumber, pageSize int)
 	return
 }
 
-func (c *client) GetRunningReleases(ctx context.Context, pageNumber, pageSize int) (pagedBuildResponse corev1.PagedBuildResponse, err error) {
+func (c *client) GetRunningReleases(ctx context.Context, pageNumber, pageSize int) (pagedReleasesResponse corev1.PagedReleasesResponse, err error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ApiClient::GetRunningReleases")
 	defer span.Finish()
 
@@ -128,13 +130,57 @@ func (c *client) GetRunningReleases(ctx context.Context, pageNumber, pageSize in
 	}
 
 	// unmarshal json body
-	err = json.Unmarshal(responseBody, &pagedBuildResponse)
+	err = json.Unmarshal(responseBody, &pagedReleasesResponse)
 	if err != nil {
 		log.Error().Err(err).Str("body", string(responseBody)).Str("url", getReleasesURL).Msgf("Failed unmarshalling get releases response")
 		return
 	}
 
 	return
+}
+
+func (c *client) CancelBuild(ctx context.Context, build *contracts.Build) (err error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ApiClient::CancelBuild")
+	defer span.Finish()
+
+	log.Info().Msgf("Canceling build for pipeline %v/%v/%v with id %v", build.RepoSource, build.RepoOwner, build.RepoName, build.ID)
+
+	// DELETE /api/pipelines/:source/:owner/:repo/builds/:revisionOrId
+	cancelBuildURL := fmt.Sprintf("%v/api/pipelines/%v/%v/%v/builds/%v", c.apiBaseURL, build.RepoSource, build.RepoOwner, build.RepoName, build.ID)
+	headers := map[string]string{
+		"Authorization": fmt.Sprintf("Bearer %v", c.token),
+		"Content-Type":  "application/json",
+	}
+
+	_, err = c.deleteRequest(cancelBuildURL, span, nil, headers)
+	if err != nil {
+		log.Error().Err(err).Str("url", cancelBuildURL).Msgf("Failed canceling build for pipeline %v/%v/%v with id %v", build.RepoSource, build.RepoOwner, build.RepoName, build.ID)
+		return
+	}
+
+	return nil
+}
+
+func (c *client) CancelRelease(ctx context.Context, release *contracts.Release) (err error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ApiClient::CancelRelease")
+	defer span.Finish()
+
+	log.Info().Msgf("Canceling release for pipeline %v/%v/%v with id %v", release.RepoSource, release.RepoOwner, release.RepoName, release.ID)
+
+	// DELETE /api/pipelines/:source/:owner/:repo/releases/:id
+	cancelReleaseURL := fmt.Sprintf("%v/api/pipelines/%v/%v/%v/releases/%v", c.apiBaseURL, release.RepoSource, release.RepoOwner, release.RepoName, release.ID)
+	headers := map[string]string{
+		"Authorization": fmt.Sprintf("Bearer %v", c.token),
+		"Content-Type":  "application/json",
+	}
+
+	_, err = c.deleteRequest(cancelReleaseURL, span, nil, headers)
+	if err != nil {
+		log.Error().Err(err).Str("url", cancelReleaseURL).Msgf("Failed canceling release for pipeline %v/%v/%v with id %v", release.RepoSource, release.RepoOwner, release.RepoName, release.ID)
+		return
+	}
+
+	return nil
 }
 
 func (c *client) getRequest(uri string, span opentracing.Span, requestBody io.Reader, headers map[string]string, allowedStatusCodes ...int) (responseBody []byte, err error) {

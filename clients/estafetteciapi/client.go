@@ -87,7 +87,7 @@ func (c *client) GetRunningBuilds(ctx context.Context, pageNumber, pageSize int)
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ApiClient::GetRunningBuilds")
 	defer span.Finish()
 
-	log.Info().Msgf("Retrieving pending/running/canceling build page %v of size %v...", pageNumber, pageSize)
+	log.Info().Msgf("Retrieving pending/running/canceling builds page %v of size %v...", pageNumber, pageSize)
 
 	span.LogKV("page[number]", pageNumber, "page[size]", pageSize)
 
@@ -109,6 +109,8 @@ func (c *client) GetRunningBuilds(ctx context.Context, pageNumber, pageSize int)
 		log.Error().Err(err).Str("body", string(responseBody)).Str("url", getBuildsURL).Msgf("Failed unmarshalling get builds response")
 		return
 	}
+
+	log.Info().Msgf("Retrieved %v pending/running/canceling builds for page %v of size %v of %v total pages", len(pagedBuildResponse.Items), pageNumber, pageSize, pagedBuildResponse.Pagination.TotalPages)
 
 	return
 }
@@ -139,6 +141,8 @@ func (c *client) GetRunningReleases(ctx context.Context, pageNumber, pageSize in
 		log.Error().Err(err).Str("body", string(responseBody)).Str("url", getReleasesURL).Msgf("Failed unmarshalling get releases response")
 		return
 	}
+
+	log.Info().Msgf("Retrieved %v pending/running/canceling releases for page %v of size %v of %v total pages", len(pagedReleasesResponse.Items), pageNumber, pageSize, pagedReleasesResponse.Pagination.TotalPages)
 
 	return
 }

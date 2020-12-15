@@ -61,6 +61,8 @@ func (c *client) GetJobs(ctx context.Context) (jobs []batchv1.Job, err error) {
 
 	jobs = jobsList.Items
 
+	log.Info().Msgf("Retrieved %v jobs with label createdBy=estafette in namespace %v", len(jobs), c.namespace)
+
 	return jobs, nil
 }
 
@@ -79,6 +81,8 @@ func (c *client) GetConfigMaps(ctx context.Context) (configmaps []v1.ConfigMap, 
 
 	configmaps = configmapsList.Items
 
+	log.Info().Msgf("Retrieved %v configmaps with label createdBy=estafette in namespace %v", len(configmaps), c.namespace)
+
 	return configmaps, nil
 }
 
@@ -96,6 +100,8 @@ func (c *client) GetSecrets(ctx context.Context) (secrets []v1.Secret, err error
 	}
 
 	secrets = secretsList.Items
+
+	log.Info().Msgf("Retrieved %v secrets with label createdBy=estafette in namespace %v", len(secrets), c.namespace)
 
 	return secrets, nil
 }

@@ -12,7 +12,6 @@ rules:
   - secrets
   - configmaps
   verbs:
-  - get
   - list
   - delete
 - apiGroups:
@@ -20,7 +19,6 @@ rules:
   resources:
   - cronjobs
   verbs:
-  - get
   - list
   - delete
 {{- end -}}

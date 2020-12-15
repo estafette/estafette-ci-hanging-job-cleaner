@@ -184,8 +184,18 @@ releases:
             clientSecret: estafette.secret(DqDyZ-RJFDT1lpwC.JlrbxN1yHKkqds1srfNfHoDkq8UAdrXKgnV9WYK1NJx8elm54KQ_AKQkvkSY1nn8XlTW_Jt-gqUKTMZSUWEHSAJphPxAXNXlvTrd_3636Nk=.dmb_mep-S6wHS5o_tLNrLITJlvBuZ6z9sHB_SK-fTqYtIkKy_o0lK5k5kB-9jmn2c3P3rKc_TlZ1s1Cf8Dp3YS9Jn3LJ)
 
           extraEnv:
-            JAEGER_SAMPLER_TYPE: probabilistic
-            JAEGER_SAMPLER_PARAM: 0.5
+            - name: "JAEGER_AGENT_HOST"
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: "JAEGER_SAMPLER_MANAGER_HOST_PORT"
+              value: "http://$(JAEGER_AGENT_HOST):5778/sampling"
+            - name: "JAEGER_SAMPLER_PARAM"
+              value: "0.5"
+            - name: "JAEGER_SAMPLER_TYPE"
+              value: "probabilistic"
+            - name: "JAEGER_SERVICE_NAME"
+              value: "estafette-ci-hanging-job-cleaner"
 
           imagePullSecret:
             registryURL: https://index.docker.io/v1/

@@ -66,10 +66,7 @@ spec:
                       key: clientSecret
                 - name: "JOB_NAMESPACE"
                   value: "{{ .Values.config.jobNamespace }}"
-                {{- range $key, $value := .Values.extraEnv }}
-                - name: {{ $key | quote }}
-                  value: {{ $value | quote }}
-                {{- end }}
+                {{- .Values.extraEnv | toYaml | nindent 16 }}
               ports:
                 - name: metrics
                   containerPort: 9101

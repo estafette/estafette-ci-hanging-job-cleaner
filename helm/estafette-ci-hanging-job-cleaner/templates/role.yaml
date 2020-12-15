@@ -1,6 +1,6 @@
 {{- if .Values.rbac.enable -}}
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: Role
 metadata:
   name: {{ include "estafette-ci-hanging-job-cleaner.fullname" . }}
   namespace: {{ .Values.config.jobNamespace }}

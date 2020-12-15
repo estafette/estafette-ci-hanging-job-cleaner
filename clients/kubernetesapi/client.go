@@ -38,6 +38,7 @@ func NewClient(namespace string) (Client, error) {
 
 	return &client{
 		kubeClientset: kubeClientset,
+		namespace:     namespace,
 	}, nil
 }
 

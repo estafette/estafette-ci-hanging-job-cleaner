@@ -76,7 +76,7 @@ stages:
   test-helm-chart:
     services:
     - name: kubernetes
-      image: bsycorp/kind:latest-1.18
+      image: bsycorp/kind:latest-1.19
       env:
         REGISTRY: https://index.docker.io/v1/
         REGISTRY_USER: estafette.secret(qKX2jICPhn4KMGx5.btaepoAXdAe7PLyO9U67MZoyUqdXaAgFBHC5b-fNHw==.fc2LuJwNOQ22JPqH4l-oMRh_HFSxE_zqppH_OzrJypTk7bWQ9HKa9ePCEwaHZgoMFRKWmpfD_eYxdxjdhH9VSI_BIAce)

@@ -6,6 +6,7 @@ import (
 
 	estafetteciapi "github.com/estafette/estafette-ci-hanging-job-cleaner/clients/estafetteciapi"
 	kubernetesapi "github.com/estafette/estafette-ci-hanging-job-cleaner/clients/kubernetesapi"
+	"github.com/opentracing/opentracing-go"
 )
 
 type Service interface {
@@ -26,6 +27,9 @@ type service struct {
 }
 
 func (s *service) Init(ctx context.Context) (err error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "cleaner.Service:Init")
+	defer span.Finish()
+
 	_, err = s.estafetteciapiClient.GetToken(ctx)
 	if err != nil {
 		return
@@ -35,6 +39,8 @@ func (s *service) Init(ctx context.Context) (err error) {
 }
 
 func (s *service) Clean(ctx context.Context) (err error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "cleaner.Service:Clean")
+	defer span.Finish()
 
 	err = s.cleanBuilds(ctx)
 	if err != nil {
@@ -65,6 +71,8 @@ func (s *service) Clean(ctx context.Context) (err error) {
 }
 
 func (s *service) cleanBuilds(ctx context.Context) (err error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "cleaner.Service:cleanBuilds")
+	defer span.Finish()
 
 	maxAgeMinutes := float64(6*60 - 15)
 	pageNumber := 1
@@ -100,6 +108,8 @@ func (s *service) cleanBuilds(ctx context.Context) (err error) {
 }
 
 func (s *service) cleanReleases(ctx context.Context) (err error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "cleaner.Service:cleanReleases")
+	defer span.Finish()
 
 	maxAgeMinutes := float64(6*60 - 15)
 	pageNumber := 1
@@ -135,6 +145,8 @@ func (s *service) cleanReleases(ctx context.Context) (err error) {
 }
 
 func (s *service) cleanJobs(ctx context.Context) (err error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "cleaner.Service:cleanJobs")
+	defer span.Finish()
 
 	maxAgeMinutes := float64(6*60 + 15)
 
@@ -157,6 +169,8 @@ func (s *service) cleanJobs(ctx context.Context) (err error) {
 }
 
 func (s *service) cleanConfigMaps(ctx context.Context) (err error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "cleaner.Service:cleanConfigMaps")
+	defer span.Finish()
 
 	maxAgeMinutes := float64(6*60 + 15)
 
@@ -179,6 +193,8 @@ func (s *service) cleanConfigMaps(ctx context.Context) (err error) {
 }
 
 func (s *service) cleanSecrets(ctx context.Context) (err error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "cleaner.Service:cleanSecrets")
+	defer span.Finish()
 
 	maxAgeMinutes := float64(6*60 + 15)
 

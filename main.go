@@ -45,7 +45,7 @@ func main() {
 
 	ctx := context.Background()
 
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Main")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "main")
 	defer span.Finish()
 
 	estafetteciapiClient, err := estafetteciapi.NewClient(*apiBaseURL, *clientID, *clientSecret)

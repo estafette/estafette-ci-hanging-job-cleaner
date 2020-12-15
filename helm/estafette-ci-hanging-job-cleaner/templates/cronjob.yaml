@@ -65,8 +65,8 @@ spec:
                       name: {{ include "estafette-ci-hanging-job-cleaner.fullname" . }}
                       key: clientSecret
                 {{- range $key, $value := .Values.extraEnv }}
-                - name: {{ $key }}
-                  value: {{ $value }}
+                - name: {{ $key | quote }}
+                  value: {{ $value | quote }}
                 {{- end }}
               ports:
                 - name: metrics

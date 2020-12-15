@@ -45,6 +45,21 @@ func (s *service) Clean(ctx context.Context) (err error) {
 		return
 	}
 
+	err = s.cleanJobs(ctx)
+	if err != nil {
+		return
+	}
+
+	err = s.cleanConfigMaps(ctx)
+	if err != nil {
+		return
+	}
+
+	err = s.cleanSecrets(ctx)
+	if err != nil {
+		return
+	}
+
 	return nil
 }
 

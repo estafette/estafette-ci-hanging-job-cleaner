@@ -169,8 +169,8 @@ releases:
       install:
         image: extensions/helm:dev
         action: install
-        namespace: estafette
-        release: estafette-vulnerability-scanner-test
+        namespace: estafette-ci
+        release: estafette-ci-hanging-job-cleaner
         values: |-
           logFormat: v3
 

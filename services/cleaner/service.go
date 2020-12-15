@@ -16,6 +16,7 @@ type Service interface {
 func NewService(estafetteciapiClient estafetteciapi.Client, kubernetesapiClient kubernetesapi.Client) (Service, error) {
 	return &service{
 		estafetteciapiClient: estafetteciapiClient,
+		kubernetesapiClient:  kubernetesapiClient,
 	}, nil
 }
 

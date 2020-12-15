@@ -37,6 +37,7 @@ spec:
           - name: {{ include "estafette-ci-hanging-job-cleaner.fullname" . }}-image-pull-secret
           {{- end }}
           serviceAccountName: {{ template "estafette-ci-hanging-job-cleaner.serviceAccountName" . }}
+          restartPolicy: {{ .Values.cronjob.restartPolicy }}
           securityContext:
             {{- toYaml .Values.podSecurityContext | nindent 12 }}
           containers:

@@ -29,6 +29,8 @@ cronjob:
   parallelism: 1
   backoffLimit: 6
 
+  restartPolicy: OnFailure
+
 # set an image pull secret to avoid Docker Hub rate limiting issues
 imagePullSecret: {}
 #  registryURL: https://index.docker.io/v1/

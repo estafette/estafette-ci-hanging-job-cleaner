@@ -64,6 +64,8 @@ spec:
                     secretKeyRef:
                       name: {{ include "estafette-ci-hanging-job-cleaner.fullname" . }}
                       key: clientSecret
+                - name: "JOB_NAMESPACE"
+                  value: "{{ .Values.config.jobNamespace }}"
                 {{- range $key, $value := .Values.extraEnv }}
                 - name: {{ $key | quote }}
                   value: {{ $value | quote }}

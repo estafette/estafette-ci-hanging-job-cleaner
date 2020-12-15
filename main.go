@@ -7,6 +7,7 @@ import (
 
 	"github.com/alecthomas/kingpin"
 	estafetteciapi "github.com/estafette/estafette-ci-hanging-job-cleaner/clients/estafetteciapi"
+	"github.com/estafette/estafette-ci-hanging-job-cleaner/clients/kubernetesapi"
 	cleaner "github.com/estafette/estafette-ci-hanging-job-cleaner/services/cleaner"
 	foundation "github.com/estafette/estafette-foundation"
 	"github.com/opentracing/opentracing-go"
@@ -28,6 +29,7 @@ var (
 	apiBaseURL   = kingpin.Flag("api-base-url", "The base url of the estafette-ci-api to communicate with").Envar("API_BASE_URL").Required().String()
 	clientID     = kingpin.Flag("client-id", "The id of the client as configured in Estafette, to securely communicate with the api.").Envar("CLIENT_ID").Required().String()
 	clientSecret = kingpin.Flag("client-secret", "The secret of the client as configured in Estafette, to securely communicate with the api.").Envar("CLIENT_SECRET").Required().String()
+	jobNamespace = kingpin.Flag("job-namespace", "The namespace where estafette build and release jobs are created.").Envar("JOB_NAMESPACE").Required().String()
 )
 
 func main() {
@@ -46,10 +48,22 @@ func main() {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "Main")
 	defer span.Finish()
 
-	estafetteciapiClient := estafetteciapi.NewClient(*apiBaseURL, *clientID, *clientSecret)
-	cleanerService := cleaner.NewService(estafetteciapiClient)
+	estafetteciapiClient, err := estafetteciapi.NewClient(*apiBaseURL, *clientID, *clientSecret)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed creating estafetteciapi.Client")
+	}
 
-	err := cleanerService.Init(ctx)
+	kubernetesapiClient, err := kubernetesapi.NewClient(*jobNamespace)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed creating kubernetesapi.Client")
+	}
+
+	cleanerService, err := cleaner.NewService(estafetteciapiClient, kubernetesapiClient)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed creating cleaner.Service")
+	}
+
+	err = cleanerService.Init(ctx)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed initializing cleaner service")
 	}

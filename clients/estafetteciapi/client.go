@@ -28,12 +28,12 @@ type Client interface {
 }
 
 // NewClient returns a new estafetteciapi.Client
-func NewClient(apiBaseURL, clientID, clientSecret string) Client {
+func NewClient(apiBaseURL, clientID, clientSecret string) (Client, error) {
 	return &client{
 		apiBaseURL:   apiBaseURL,
 		clientID:     clientID,
 		clientSecret: clientSecret,
-	}
+	}, nil
 }
 
 type client struct {
@@ -44,7 +44,7 @@ type client struct {
 }
 
 func (c *client) GetToken(ctx context.Context) (token string, err error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ApiClient::GetToken")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "estafetteciapi.Client:GetToken")
 	defer span.Finish()
 
 	log.Debug().Msgf("Retrieving JWT token")
@@ -84,7 +84,7 @@ func (c *client) GetToken(ctx context.Context) (token string, err error) {
 }
 
 func (c *client) GetRunningBuilds(ctx context.Context, pageNumber, pageSize int) (pagedBuildResponse corev1.PagedBuildResponse, err error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ApiClient::GetRunningBuilds")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "estafetteciapi.Client:GetRunningBuilds")
 	defer span.Finish()
 
 	log.Info().Msgf("Retrieving pending/running/canceling builds page %v of size %v...", pageNumber, pageSize)
@@ -116,7 +116,7 @@ func (c *client) GetRunningBuilds(ctx context.Context, pageNumber, pageSize int)
 }
 
 func (c *client) GetRunningReleases(ctx context.Context, pageNumber, pageSize int) (pagedReleasesResponse corev1.PagedReleasesResponse, err error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ApiClient::GetRunningReleases")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "estafetteciapi.Client:GetRunningReleases")
 	defer span.Finish()
 
 	log.Info().Msgf("Retrieving pending/running/canceling releases page %v of size %v...", pageNumber, pageSize)
@@ -148,7 +148,7 @@ func (c *client) GetRunningReleases(ctx context.Context, pageNumber, pageSize in
 }
 
 func (c *client) CancelBuild(ctx context.Context, build *contracts.Build) (err error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ApiClient::CancelBuild")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "estafetteciapi.Client:CancelBuild")
 	defer span.Finish()
 
 	log.Info().Msgf("Canceling build for pipeline %v/%v/%v with id %v, status %v and started at %v...", build.RepoSource, build.RepoOwner, build.RepoName, build.ID, build.BuildStatus, build.InsertedAt)
@@ -172,7 +172,7 @@ func (c *client) CancelBuild(ctx context.Context, build *contracts.Build) (err e
 }
 
 func (c *client) CancelRelease(ctx context.Context, release *contracts.Release) (err error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ApiClient::CancelRelease")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "estafetteciapi.Client:CancelRelease")
 	defer span.Finish()
 
 	log.Info().Msgf("Canceling release for pipeline %v/%v/%v with id %v, status %v and started at %v...", release.RepoSource, release.RepoOwner, release.RepoName, release.ID, release.ReleaseStatus, release.InsertedAt)

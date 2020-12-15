@@ -19,7 +19,8 @@ func TestGetToken(t *testing.T) {
 		getBaseURL := os.Getenv("API_BASE_URL")
 		clientID := os.Getenv("CLIENT_ID")
 		clientSecret := os.Getenv("CLIENT_SECRET")
-		client := NewClient(getBaseURL, clientID, clientSecret)
+		client, err := NewClient(getBaseURL, clientID, clientSecret)
+		assert.Nil(t, err)
 
 		// act
 		token, err := client.GetToken(ctx)

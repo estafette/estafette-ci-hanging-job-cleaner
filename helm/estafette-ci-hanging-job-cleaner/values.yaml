@@ -11,6 +11,8 @@ config:
   apiBaseURL: ""
   # client id for the client created in estafette-ci admin for this application
   clientID: ""
+  # the namespace where estafette build and release jobs are created.
+  jobNamespace: estafette-ci-jobs
 
 secret:
   # if set to true the values are already base64 encoded when provided, otherwise the template performs the base64 encoding

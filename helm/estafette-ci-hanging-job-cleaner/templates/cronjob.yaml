@@ -28,8 +28,6 @@ spec:
             {{ $key }}: {{ $value }}
             {{- end }}
           annotations:
-            prometheus.io/scrape: "true"
-            prometheus.io/port: "9101"
             checksum/secrets: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
         spec:
           {{- if .Values.imagePullSecret }}
@@ -69,16 +67,6 @@ spec:
               {{- with .Values.extraEnv }}
                 {{- toYaml . | nindent 16 }}
               {{- end }}
-              ports:
-                - name: metrics
-                  containerPort: 9101
-                  protocol: TCP
-              livenessProbe:
-                httpGet:
-                  path: /liveness
-                  port: 5000
-                initialDelaySeconds: 30
-                timeoutSeconds: 5
               resources:
                 {{- toYaml .Values.resources | nindent 16 }}
           terminationGracePeriodSeconds: 300

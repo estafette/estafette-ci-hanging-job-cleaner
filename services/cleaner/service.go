@@ -74,7 +74,7 @@ func (s *service) cleanBuilds(ctx context.Context) (err error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "cleaner.Service:cleanBuilds")
 	defer span.Finish()
 
-	maxAgeMinutes := float64(6*60 - 15)
+	maxAgeMinutes := float64(6*60 - 5)
 	pageNumber := 1
 	pageSize := 12
 
@@ -111,7 +111,7 @@ func (s *service) cleanReleases(ctx context.Context) (err error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "cleaner.Service:cleanReleases")
 	defer span.Finish()
 
-	maxAgeMinutes := float64(6*60 - 15)
+	maxAgeMinutes := float64(6*60 - 5)
 	pageNumber := 1
 	pageSize := 12
 
@@ -148,7 +148,7 @@ func (s *service) cleanJobs(ctx context.Context) (err error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "cleaner.Service:cleanJobs")
 	defer span.Finish()
 
-	maxAgeMinutes := float64(6*60 + 15)
+	maxAgeMinutes := float64(6*60 + 5)
 
 	jobs, err := s.kubernetesapiClient.GetJobs(ctx)
 	if err != nil {
@@ -172,7 +172,7 @@ func (s *service) cleanConfigMaps(ctx context.Context) (err error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "cleaner.Service:cleanConfigMaps")
 	defer span.Finish()
 
-	maxAgeMinutes := float64(6*60 + 15)
+	maxAgeMinutes := float64(6*60 + 5)
 
 	configmaps, err := s.kubernetesapiClient.GetConfigMaps(ctx)
 	if err != nil {
@@ -196,7 +196,7 @@ func (s *service) cleanSecrets(ctx context.Context) (err error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "cleaner.Service:cleanSecrets")
 	defer span.Finish()
 
-	maxAgeMinutes := float64(6*60 + 15)
+	maxAgeMinutes := float64(6*60 + 5)
 
 	secrets, err := s.kubernetesapiClient.GetSecrets(ctx)
 	if err != nil {
